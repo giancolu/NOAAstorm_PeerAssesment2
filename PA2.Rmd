@@ -9,34 +9,35 @@ output:
 
 Load needed packages
 ```{r, message = F}
-library(R.utils)
-library(ggplot2)
+require(R.utils)
+require(ggplot2)
 ```
 
 
 Set work directory, download and extract bzipped dataset
 ```{r}
 setwd("~/NOAAstorm_PeerAssesment2")
-dir <- dir()
-fileex <- dir=="NOAAstorm.csv.bz2"
-fileex1 <- sum(fileex*1)
-if (fileex1==0) {
+if (!file.exists("NOAAstorm.csv.bz2")) {
         url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
         download.file(url,"NOAAstorm.csv.bz2",method="curl")        
         }
-fileex2 <- dir=="NOAAstorm.csv"
-fileex3 <- sum(fileex2*1)
-        if (fileex3==0) {
+if (!file.exists("NOAAstorm.csv")) {
         bunzip2("NOAAstorm.csv.bz2","NOAAstorm.csv",remove=FALSE)
         } 
 db <- read.csv("NOAAstorm.csv", na.strings = "")
 ```
+
+Create a class date factor
+```{r}
+db$date <- strptime(as.character(db$BGN_DATE),"%m/%d/%Y %H:%M:%S")
+```
+
 Download Storm Data Documentation
 ```{r}
 if (!file.exists("Storm.Data.Documentation.pdf")) {
     url1 = "https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01    016005curr.pdf"
     download.file(url1,"Storm.Data.Documentation.pdf",method="curl")
-}
+        }
 ```
 
 
@@ -45,10 +46,9 @@ if (!file.exists("Storm.Data.Documentation.pdf")) {
 Select variables to answer the question
 ```{r}
 db1 <- db[,c("BGN_DATE","STATE","EVTYPE","FATALITIES","INJURIES")]
-summary (db1)
+str (db1)
 ```
-
-Create a variable that sum fatalities and injuries and eliminate events without harm
+Create a variable that sums fatalities and injuries and eliminate events without harm
 ```{r}
 db1$harm <- db1$FATALITIES + db1$INJURIES
 summary(db1$harm)
@@ -60,7 +60,7 @@ Summarize harm for each event type
 eventharm.df <- aggregate(harm ~ EVTYPE, data = db2, FUN = "sum")
 ```
 
-Extract the top 20 causes of harm, aggregate thunderstorm and current rip data, and make a pie graph 
+Extract the top 20 causes of harm, aggregate thunderstorm and current rip data because present in different place, and make a bar graph 
 ```{r, fig.height = 8,fig.width = 12}
 top <- eventharm.df[order(-eventharm.df$harm),]
 top$harm1 <- top$harm
@@ -74,8 +74,23 @@ par(mai=c(1.5,2.1,1,1))
 barplot(top20reordered$harm1, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
 ```
 
+### Across the United States, which types of events have the greatest economic consequences?
 
+Select variables to answer the question
 ```{r}
-db$date <- strptime(as.character(db$BGN_DATE),"%m/%d/%Y %H:%M:%S")
+ecocons <- db[,c("EVTYPE","PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP")]
+str (ecocons)
 ```
-
+Create a variable that sums properties and crops damage and eliminate events without economic impact
+```{r}
+ecocons$PROPDMGEXP <- as.character(toupper(ecocons$PROPDMGEXP))
+ecocons$CROPDMGEXP <- as.character(toupper(ecocons$CROPDMGEXP))
+ecocons1 <- na.omit(ecocons)
+for (i in 1:nrow(ecocons1)) {
+        if (ecocons1$PROPDMGEXP[i] == "H") {
+                ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 100} else if (ecocons1$PROPDMGEXP[i] == "K") {
+                        ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000} else if (ecocons1$PROPDMGEXP[i] == "M") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000} else if (ecocons1$PROPDMGEXP[i] == "B") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000000} else {
+                                        ecocons1$PROPimpact[i] = NA
+        }
+}
+```

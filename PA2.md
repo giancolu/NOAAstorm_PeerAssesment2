@@ -1,3 +1,8 @@
+---
+output:
+  html_document:
+    keep_md: yes
+---
 ## Peer assessment 2 - Exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
 
 ### Download and preprocessing data
@@ -28,6 +33,10 @@ fileex3 <- sum(fileex2*1)
         } 
 db <- read.csv("NOAAstorm.csv", na.strings = "")
 ```
+
+```
+## Warning: EOF within quoted string
+```
 Download Storm Data Documentation
 
 ```r
@@ -48,19 +57,19 @@ summary (db1)
 ```
 
 ```
-##               BGN_DATE          STATE                      EVTYPE      
-##  5/25/2011 0:00:00:  1202   TX     : 83728   HAIL             :288661  
-##  4/27/2011 0:00:00:  1193   KS     : 53440   TSTM WIND        :219940  
-##  6/9/2011 0:00:00 :  1030   OK     : 46802   THUNDERSTORM WIND: 82563  
-##  5/30/2004 0:00:00:  1016   MO     : 35648   TORNADO          : 60652  
-##  4/4/2011 0:00:00 :  1009   IA     : 31069   FLASH FLOOD      : 54277  
-##  4/2/2006 0:00:00 :   981   NE     : 30271   FLOOD            : 25326  
-##  (Other)          :895866   (Other):621339   (Other)          :170878  
+##               BGN_DATE          STATE                       EVTYPE      
+##  5/31/1998 0:00:00:   933   TX     : 45028   TSTM WIND         :144163  
+##  5/18/1995 0:00:00:   766   OK     : 28966   HAIL              :131021  
+##  6/18/1998 0:00:00:   695   KS     : 24186   TORNADO           : 43855  
+##  5/17/1999 0:00:00:   623   MO     : 15151   THUNDERSTORM WINDS: 20843  
+##  6/29/1998 0:00:00:   614   NE     : 14654   FLASH FLOOD       : 14980  
+##  5/15/1998 0:00:00:   592   AR     : 13978   LIGHTNING         :  6774  
+##  (Other)          :400163   (Other):262423   (Other)           : 42750  
 ##    FATALITIES     INJURIES     
 ##  Min.   :  0   Min.   :   0.0  
 ##  1st Qu.:  0   1st Qu.:   0.0  
 ##  Median :  0   Median :   0.0  
-##  Mean   :  0   Mean   :   0.2  
+##  Mean   :  0   Mean   :   0.3  
 ##  3rd Qu.:  0   3rd Qu.:   0.0  
 ##  Max.   :583   Max.   :1700.0  
 ## 
@@ -75,7 +84,7 @@ summary(db1$harm)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     0.0     0.0     0.0     0.2     0.0  1740.0
+##     0.0     0.0     0.0     0.3     0.0  1740.0
 ```
 
 ```r
@@ -103,7 +112,7 @@ par(mai=c(1.5,2.1,1,1))
 barplot(top20reordered$harm1, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
 ```
 
-![plot of chunk unnamed-chunk-7](./PA2_files/figure-html/unnamed-chunk-7.png) 
+![plot of chunk unnamed-chunk-7](figure/unnamed-chunk-7.png) 
 
 
 
