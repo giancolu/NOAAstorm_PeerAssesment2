@@ -24,6 +24,7 @@
 *.xlsx
 *.xls
 *.Rhistory
+*.Rdata
  
 # Logs and databases #
 ######################
