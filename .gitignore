@@ -23,6 +23,7 @@
 *.pdf
 *.xlsx
 *.xls
+*.Rhistory
  
 # Logs and databases #
 ######################
