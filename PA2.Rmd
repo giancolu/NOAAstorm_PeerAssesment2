@@ -1,10 +1,3 @@
----
-title: "PA2"
-author: "GianLuca Colussi"
-date: "08/16/2014"
-output: html_document
----
-
 ## Peer assessment 2 - Exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
 
 ### Download and preprocessing data
@@ -32,5 +25,52 @@ fileex3 <- sum(fileex2*1)
         bunzip2("NOAAstorm.csv.bz2","NOAAstorm.csv",remove=FALSE)
         } 
 db <- read.csv("NOAAstorm.csv", na.strings = "")
+```
+Download Storm Data Documentation
+```{r}
+if (!file.exists("Storm.Data.Documentation.pdf")) {
+    url1 = "https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01    016005curr.pdf"
+    download.file(url1,"Storm.Data.Documentation.pdf",method="curl")
+}
+```
+
+
+### Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+
+Select variables to answer the question
+```{r}
+db1 <- db[,c("BGN_DATE","STATE","EVTYPE","FATALITIES","INJURIES")]
+summary (db1)
+```
+
+Create a variable that sum fatalities and injuries and eliminate events without harm
+```{r}
+db1$harm <- db1$FATALITIES + db1$INJURIES
+summary(db1$harm)
+db2 <- db1[db1$harm > 0,]
+```
+
+Summarize harm for each event type
+```{r}
+eventharm.df <- aggregate(harm ~ EVTYPE, data = db2, FUN = "sum")
+```
+
+Extract the top 20 causes of harm, aggregate thunderstorm and current rip data, and make a pie graph 
+```{r, fig.height = 8,fig.width = 12}
+top <- eventharm.df[order(-eventharm.df$harm),]
+top$harm1 <- top$harm
+top$harm1[3] <- top$harm[3] + top$harm[9] + top$harm[16]
+top$harm1[19] <- top$harm[19] + top$harm[21]
+top <- top[order(top$harm1,decreasing=T),][c(-9,-17,-21),]
+top[2,1] <- "THUNDERSTORM WIND" 
+top20 <- top[1:20,]
+top20reordered <- top20[order(top20$harm1),]
+par(mai=c(1.5,2.1,1,1))
+barplot(top20reordered$harm1, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
+```
+
+
+```{r}
+db$date <- strptime(as.character(db$BGN_DATE),"%m/%d/%Y %H:%M:%S")
 ```
 
