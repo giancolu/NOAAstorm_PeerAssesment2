@@ -1,34 +1,33 @@
-## In U.S. tornado and flooding are the leading causes of harmful events and economic impact, respectively, from years 1950 to 2011 according to the data of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
+## In U.S. tornado and flooding are the leading causes of public health problems and economic consequences associated with atmospheric events from years 1950 to 2011 according to the data of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
 
 ### SYNOPSIS
-* The aim of our analysis was to establish the leading causes of harmful events and economic impact due to atmosperic events in U.S.
-* In particular, we responded to the following questions:
-1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
-2. Across the United States, which types of events have the greatest economic consequences?
-* For our aim we use the data of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database that are freely available at the following link https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2  
+* The aim of our analysis was to establish the leading causes of public health problems and economic consequences associated with atmosperic events in U.S.
+* In particular, we answered to the following questions:
+  1. Across the United States, which types of events are most harmful with respect to population health?
+  2. Across the United States, which types of events have the greatest economic consequences?
+* For our aim we use the data of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database   
 * This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage from years 1950 to 2011
-* Database was bunzipped from the original website location and stored locally.
-* To respond to the first question we summarized harmful events aggregating fatalities and injuries that were directly or indirectly associated with the type of atmospheric event. 
-* To respond to the second question we aggregate the economic impact of the damage to properties and crops (in U.S. dollars) that was associated with the type of athmosferic events.
-* The answer to the first question is represented in Figure 1, a bargraph showing the top 20 causes (atmospheric event) of public health problems (harmful events). Tornado was the leading causes. 
-*The answer to the second question is represented in Figure 2, a bargraph showing the top 20 causes of economic impact due to the atmospheric event. Flooding was the leading cause.
-*In figure 3 we compare the top 5 atmospheric events responsible of public health problems and economic impact, respectively. Tornado/hurricane, flooding, and thunderstorm wind were responsible for the majority of harmful events and economic impact. 
-* In conclusion, U.S. Government should taking in to account politics to limit the adverse effects especially of tornado/hurricane, flooding, and thunderstorm wind to have a real positive impact on public health and economy of U.S. 
+* The original database and its related documentation were freely downloaded and bunzipped from the web at the following links (database: https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2; documentations: https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf) and stored locally
+* To respond to the first question we summarized public health problems by aggregating the number of fatalities and injuries that were directly or indirectly associated with the type of atmospheric event. 
+* To respond to the second question we summarize economic consequences by aggregating the expenses (in U.S. dollars) due to properties and crops damage associated with the type of atmospheric event
+* The answer to the first question is represented in Figure 1, a bargraph showing the top 20 causes (atmospheric event) of public health problems (total harmful events) and tornado was the leading cause. 
+* The answer to the second question is represented in Figure 2, a bargraph showing the top 20 causes of economic consequences (economic impact) due to atmospheric event associated damages and flooding was the leading cause.
+* In figure 3 we compare the top 5 atmospheric events responsible for public health problems and economic consequences. Tornado/hurricane, flooding, and thunderstorm wind were responsible for the majority of harmful events and economic expenditures. 
+* In conclusion, U.S. Government should taking in to account politics to limit the adverse effects especially of tornado/hurricane, flooding, and thunderstorm wind to have a real positive impact on Public Health and Economy of U.S. 
 
 ### DATA PROCESSING
 
 Load needed packages
 ```{r}
 require(R.utils)
-require(ggplot2)
 ```
 
-Set work directory, download and extract bzipped dataset
+Set work directory, download and extract bzipped dataset and store locally
 ```{r}
-setwd("~/NOAAstorm_PeerAssesment2")
+setwd("D:/Documents/GitHub/NOAAstorm_PeerAssesment2/")
 if (!file.exists("NOAAstorm.csv.bz2")) {
-        url <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
-        download.file(url,"NOAAstorm.csv.bz2",method="curl")        
+        url <- "http://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
+        download.file(url,"NOAAstorm.csv.bz2")        
         }
 if (!file.exists("NOAAstorm.csv")) {
         bunzip2("NOAAstorm.csv.bz2","NOAAstorm.csv",remove=FALSE)
@@ -41,23 +40,24 @@ Create a class date factor
 db$date <- strptime(as.character(db$BGN_DATE),"%m/%d/%Y %H:%M:%S")
 ```
 
-Download Storm Data Documentation
+Download Storm Data Documentation and store locally
 ```{r}
 if (!file.exists("Storm.Data.Documentation.pdf")) {
-    url1 = "https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01    016005curr.pdf"
-    download.file(url1,"Storm.Data.Documentation.pdf",method="curl")
+    url1 = "http://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf"
+    download.file(url1,"Storm.Data.Documentation.pdf")
         }
 ```
 
 ##Results
 
-# Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+### Question 1: Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
 
 Select variables to answer the question
 ```{r}
 db1 <- db[,c("BGN_DATE","STATE","EVTYPE","FATALITIES","INJURIES")]
 str (db1)
 ```
+
 Create a variable that sums fatalities and injuries and eliminate events without harm
 ```{r}
 db1$harm <- db1$FATALITIES + db1$INJURIES
@@ -65,8 +65,8 @@ summary(db1$harm)
 db2 <- db1[db1$harm > 0,]
 ```
 
-Extract the top 20 causes of harm, aggregate similar type of events, and make a bar graph 
-```{r, fig.height = 8,fig.width = 12}
+Extract the top 20 causes of harm, aggregate similar type of events, and make a bargraph 
+```{r Figure 1, fig.height = 8,fig.width = 12}
 db2$EVTYPE <- toupper(db2$EVTYPE)
 db2$EVTYPE[grep("TSTM WIND", db2$EVTYPE)] <- "THUNDERSTORM WIND"
 db2$EVTYPE[grep("THUNDERSTORM WIND", db2$EVTYPE)] <- "THUNDERSTORM WIND"
@@ -78,11 +78,14 @@ db3 <- aggregate(harm ~ EVTYPE, data=db2,FUN = "sum")
 top <- db3[order(db3$harm,decreasing=T),]
 top20 <- top[1:20,]
 top20reordered <- top20[order(top20$harm),]
-par(mfrow = c(1,1), mai=c(1.5,2.1,1,1))
-barplot(top20reordered$harm, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
+par(mfrow = c(1,1), mai=c(1.3,2.1,1,1))
+barplot(top20reordered$harm, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events") 
+title("Figure 1. Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", cex = 2)
+mtext("Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database", side = 1, cex = 1.2)
+grid(10, NA)
 ```
 
-# Across the United States, which types of events have the greatest economic consequences?
+### Question 2: Across the United States, which types of events have the greatest economic consequences?
 
 Select variables to answer the question
 ```{r}
@@ -131,18 +134,23 @@ ecocons2 <- aggregate(totimpact ~ EVTYPE, data=ecocons1,FUN = "sum")
 topimpact <- ecocons2[order(ecocons2$totimpact,decreasing=T),]
 ```
 
-Create a horizontal bar graph with the top 20 type of event with economic impact in U.S. from 1950 to 2011
-```{r, fig.height = 8,fig.width = 12}
+Create a bargraph with the top 20 type of event with economic impact in U.S. from 1950 to 2011
+```{r Figure 2, fig.height = 8,fig.width = 12}
 topimpact20 <- topimpact[1:20,]
 topimp20reord <- topimpact20[order(topimpact20$totimpact),]
-par(mfrow = c(1,1), mai=c(1.5,2.1,1,1))
-barplot(topimp20reord$totimpact, horiz = T, names.arg = topimp20reord$EVTYPE, las = 1,xlim=c(0,200000000000), cex.names = 1, xlab = "Economic impact ($)", main = "Top 20 causes (type of event) of economical impact for damage to property and crop \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
+par(mfrow = c(1,1), mai=c(1.3,2.1,1,1))
+barplot(topimp20reord$totimpact, horiz = T, names.arg = topimp20reord$EVTYPE, las = 1,xlim=c(0,200000000000), cex.names = 1, xlab = "Economic expenditure (U.S. Dollars $)") 
+title("Figure 2. Top 20 causes (type of event) of economical expenditure for damage \nto property and crop from 1950 to 2011 in U.S.", cex = 2) 
+mtext("Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database", side = 1, cex = 1.2)
+grid(8, NA)
 ```
 Comparison of top 5 type of event of harm and economic impact in U.S. from 1950 and 2011
-```{r,fig.height = 8,fig.width = 12}
-par(mfrow=c(1,2),oma = c(3,0,3,0))
-barplot(top20reordered$harm[15:20], horiz = T, names.arg = top20reordered$EVTYPE[15:20], las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events")
-barplot(topimp20reord$totimpact[15:20], horiz = T, names.arg = topimp20reord$EVTYPE[15:20], las = 1,xlim=c(0,200000000000), cex.names = 1, xlab = "Economic impact ($ USD)")
-mtext("Comparison of top 5 type of event of harm and economic impact \nin U.S. from 1950 and 2011",outer = T, cex = 1.5) 
-mtext("Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database", side = 1, outer = T )
+```{r Figure 3,fig.height = 8,fig.width = 12}
+par(mfrow=c(1,2),oma = c(1,5,3,1))
+barplot(top20reordered$harm[15:20], horiz = T, names.arg = top20reordered$EVTYPE[15:20], las = 1,xlim=c(0,100000), cex.names = 0.8, xlab = "Total harmful events")
+grid(10,NA)
+barplot(topimp20reord$totimpact[15:20], horiz = T, names.arg = topimp20reord$EVTYPE[15:20], las = 1,xlim=c(0,200000000000), cex.names = 0.8, xlab = "Economic expenditure (U.S. Dollars $)")
+grid(8,NA)
+title("Figure 3. Comparison of the top 5 atmospheric causes of Public Health problems \nand economic consequences in U.S. from 1950 and 2011", outer = T, cex = 2) 
+mtext("Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database", side = 1, outer = T, cex = 1.2 )
 ```
