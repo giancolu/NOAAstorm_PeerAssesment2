@@ -1,18 +1,27 @@
----
-output:
-  html_document:
-    keep_md: yes
----
-## Peer assessment 2 - Exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
+## In U.S. tornado and flooding are the leading causes of harmful events and economic impact, respectively, from years 1950 to 2011 according to the data of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
 
-### Download and preprocessing data
+### SYNOPSIS
+* The aim of our analysis was to establish the leading causes of harmful events and economic impact due to atmosperic events in U.S.
+* In particular, we responded to the following questions:
+1. Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+2. Across the United States, which types of events have the greatest economic consequences?
+* For our aim we use the data of the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database that are freely available at the following link https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2  
+* This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage from years 1950 to 2011
+* Database was bunzipped from the original website location and stored locally.
+* To respond to the first question we summarized harmful events aggregating fatalities and injuries that were directly or indirectly associated with the type of atmospheric event. 
+* To respond to the second question we aggregate the economic impact of the damage to properties and crops (in U.S. dollars) that was associated with the type of athmosferic events.
+* The answer to the first question is represented in Figure 1, a bargraph showing the top 20 causes (atmospheric event) of public health problems (harmful events). Tornado was the leading causes. 
+*The answer to the second question is represented in Figure 2, a bargraph showing the top 20 causes of economic impact due to the atmospheric event. Flooding was the leading cause.
+*In figure 3 we compare the top 5 atmospheric events responsible of public health problems and economic impact, respectively. Tornado/hurricane, flooding, and thunderstorm wind were responsible for the majority of harmful events and economic impact. 
+* In conclusion, U.S. Government should taking in to account politics to limit the adverse effects especially of tornado/hurricane, flooding, and thunderstorm wind to have a real positive impact on public health and economy of U.S. 
+
+### DATA PROCESSING
 
 Load needed packages
-```{r, message = F}
+```{r}
 require(R.utils)
 require(ggplot2)
 ```
-
 
 Set work directory, download and extract bzipped dataset
 ```{r}
@@ -40,8 +49,9 @@ if (!file.exists("Storm.Data.Documentation.pdf")) {
         }
 ```
 
+##Results
 
-### Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
+# Across the United States, which types of events (as indicated in the EVTYPE variable) are most harmful with respect to population health?
 
 Select variables to answer the question
 ```{r}
@@ -55,42 +65,84 @@ summary(db1$harm)
 db2 <- db1[db1$harm > 0,]
 ```
 
-Summarize harm for each event type
-```{r}
-eventharm.df <- aggregate(harm ~ EVTYPE, data = db2, FUN = "sum")
-```
-
-Extract the top 20 causes of harm, aggregate thunderstorm and current rip data because present in different place, and make a bar graph 
+Extract the top 20 causes of harm, aggregate similar type of events, and make a bar graph 
 ```{r, fig.height = 8,fig.width = 12}
-top <- eventharm.df[order(-eventharm.df$harm),]
-top$harm1 <- top$harm
-top$harm1[3] <- top$harm[3] + top$harm[9] + top$harm[16]
-top$harm1[19] <- top$harm[19] + top$harm[21]
-top <- top[order(top$harm1,decreasing=T),][c(-9,-17,-21),]
-top[2,1] <- "THUNDERSTORM WIND" 
+db2$EVTYPE <- toupper(db2$EVTYPE)
+db2$EVTYPE[grep("TSTM WIND", db2$EVTYPE)] <- "THUNDERSTORM WIND"
+db2$EVTYPE[grep("THUNDERSTORM WIND", db2$EVTYPE)] <- "THUNDERSTORM WIND"
+db2$EVTYPE[grep("FLASH FLOOD", db2$EVTYPE)] <- "FLOOD"
+db2$EVTYPE[grep("RIVER FLOOD", db2$EVTYPE)] <- "FLOOD"
+db2$EVTYPE[grep("HURRICANE",db2$EVTYPE)] <- "HURRICANE"
+db2$EVTYPE[grep("RIP CURRENT",db2$EVTYPE)] <- "RIP CURRENT"
+db3 <- aggregate(harm ~ EVTYPE, data=db2,FUN = "sum")
+top <- db3[order(db3$harm,decreasing=T),]
 top20 <- top[1:20,]
-top20reordered <- top20[order(top20$harm1),]
-par(mai=c(1.5,2.1,1,1))
-barplot(top20reordered$harm1, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
+top20reordered <- top20[order(top20$harm),]
+par(mfrow = c(1,1), mai=c(1.5,2.1,1,1))
+barplot(top20reordered$harm, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
 ```
 
-### Across the United States, which types of events have the greatest economic consequences?
+# Across the United States, which types of events have the greatest economic consequences?
 
 Select variables to answer the question
 ```{r}
 ecocons <- db[,c("EVTYPE","PROPDMG","PROPDMGEXP","CROPDMG","CROPDMGEXP")]
 str (ecocons)
 ```
-Create a variable that sums properties and crops damage and eliminate events without economic impact
+
+Create a variable that sums properties and crops damage, eliminate events without economic impact, and aggregate similar type of event
 ```{r}
 ecocons$PROPDMGEXP <- as.character(toupper(ecocons$PROPDMGEXP))
 ecocons$CROPDMGEXP <- as.character(toupper(ecocons$CROPDMGEXP))
-ecocons1 <- na.omit(ecocons)
+ecoconsNA <- na.omit(ecocons)
+ecocons1 <- ecoconsNA["PROPDMG" > 0 | "CROPDMG" > 0,]
 for (i in 1:nrow(ecocons1)) {
-        if (ecocons1$PROPDMGEXP[i] == "H") {
-                ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 100} else if (ecocons1$PROPDMGEXP[i] == "K") {
-                        ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000} else if (ecocons1$PROPDMGEXP[i] == "M") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000} else if (ecocons1$PROPDMGEXP[i] == "B") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000000} else {
-                                        ecocons1$PROPimpact[i] = NA
-        }
+    if (ecocons1$PROPDMGEXP[i] == "H") {
+            ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 100
+                } else if (ecocons1$PROPDMGEXP[i] == "K") {
+                        ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000
+                        } else if (ecocons1$PROPDMGEXP[i] == "M") {
+                            ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000
+                            } else if (ecocons1$PROPDMGEXP[i] == "B") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000000                                                                       } else {
+                                ecocons1$PROPimpact[i] = NA
+                                }
 }
+
+for (n in 1:nrow(ecocons1)) {
+        if (ecocons1$CROPDMGEXP[n] == "K") {
+            ecocons1$CROPimpact[n] = ecocons1$CROPDMG[n] * 1000
+            } else if (ecocons1$CROPDMGEXP[n] == "M") {
+                ecocons1$CROPimpact[n] = ecocons1$CROPDMG[n] * 1000000
+                } else if (ecocons1$CROPDMGEXP[n] == "B") {
+                    ecocons1$CROPimpact[n] = ecocons1$CROPDMG[n] * 1000000000
+                    } else {
+                        ecocons1$CROPimpact[n] = NA
+                        }
+}
+
+ecocons1$totimpact <- with(ecocons1,(PROPimpact + CROPimpact)) 
+ecocons1$EVTYPE <- toupper(ecocons1$EVTYPE)
+ecocons1$EVTYPE[grep("TSTM WIND", ecocons1$EVTYPE)] <- "THUNDERSTORM WIND"
+ecocons1$EVTYPE[grep("THUNDERSTORM WIND", ecocons1$EVTYPE)] <- "THUNDERSTORM WIND"
+ecocons1$EVTYPE[grep("FLASH FLOOD", ecocons1$EVTYPE)] <- "FLOOD"
+ecocons1$EVTYPE[grep("RIVER FLOOD", ecocons1$EVTYPE)] <- "FLOOD"
+ecocons1$EVTYPE[grep("HURRICANE",ecocons1$EVTYPE)] <- "HURRICANE"
+ecocons2 <- aggregate(totimpact ~ EVTYPE, data=ecocons1,FUN = "sum")
+topimpact <- ecocons2[order(ecocons2$totimpact,decreasing=T),]
+```
+
+Create a horizontal bar graph with the top 20 type of event with economic impact in U.S. from 1950 to 2011
+```{r, fig.height = 8,fig.width = 12}
+topimpact20 <- topimpact[1:20,]
+topimp20reord <- topimpact20[order(topimpact20$totimpact),]
+par(mfrow = c(1,1), mai=c(1.5,2.1,1,1))
+barplot(topimp20reord$totimpact, horiz = T, names.arg = topimp20reord$EVTYPE, las = 1,xlim=c(0,200000000000), cex.names = 1, xlab = "Economic impact ($)", main = "Top 20 causes (type of event) of economical impact for damage to property and crop \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
+```
+Comparison of top 5 type of event of harm and economic impact in U.S. from 1950 and 2011
+```{r,fig.height = 8,fig.width = 12}
+par(mfrow=c(1,2),oma = c(3,0,3,0))
+barplot(top20reordered$harm[15:20], horiz = T, names.arg = top20reordered$EVTYPE[15:20], las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events")
+barplot(topimp20reord$totimpact[15:20], horiz = T, names.arg = topimp20reord$EVTYPE[15:20], las = 1,xlim=c(0,200000000000), cex.names = 1, xlab = "Economic impact ($ USD)")
+mtext("Comparison of top 5 type of event of harm and economic impact \nin U.S. from 1950 and 2011",outer = T, cex = 1.5) 
+mtext("Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database", side = 1, outer = T )
 ```

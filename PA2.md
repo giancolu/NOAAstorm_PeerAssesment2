@@ -1,3 +1,8 @@
+---
+output:
+  html_document:
+    keep_md: yes
+---
 ## Peer assessment 2 - Exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database
 
 ### Download and preprocessing data
@@ -22,10 +27,6 @@ if (!file.exists("NOAAstorm.csv")) {
         bunzip2("NOAAstorm.csv.bz2","NOAAstorm.csv",remove=FALSE)
         } 
 db <- read.csv("NOAAstorm.csv", na.strings = "")
-```
-
-```
-## Warning: EOF within quoted string
 ```
 
 Create a class date factor
@@ -54,10 +55,10 @@ str (db1)
 ```
 
 ```
-## 'data.frame':	404386 obs. of  5 variables:
-##  $ BGN_DATE  : Factor w/ 12354 levels "10/10/1954 0:00:00",..: 4456 4456 2775 8169 1001 1001 1026 1922 2619 2619 ...
-##  $ STATE     : Factor w/ 58 levels "AK","AL","AM",..: 2 2 2 2 2 2 2 2 2 2 ...
-##  $ EVTYPE    : Factor w/ 924 levels "?","ABNORMAL WARMTH",..: 783 783 783 783 783 783 783 783 783 783 ...
+## 'data.frame':	902297 obs. of  5 variables:
+##  $ BGN_DATE  : Factor w/ 16335 levels "10/10/1954 0:00:00",..: 6523 6523 4213 11116 1426 1426 1462 2873 3980 3980 ...
+##  $ STATE     : Factor w/ 72 levels "AK","AL","AM",..: 2 2 2 2 2 2 2 2 2 2 ...
+##  $ EVTYPE    : Factor w/ 985 levels "?","ABNORMALLY DRY",..: 830 830 830 830 830 830 830 830 830 830 ...
 ##  $ FATALITIES: num  0 0 0 0 0 0 0 0 1 0 ...
 ##  $ INJURIES  : num  15 0 2 2 2 6 1 0 14 0 ...
 ```
@@ -70,7 +71,7 @@ summary(db1$harm)
 
 ```
 ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-##     0.0     0.0     0.0     0.3     0.0  1740.0
+##     0.0     0.0     0.0     0.2     0.0  1740.0
 ```
 
 ```r
@@ -98,7 +99,7 @@ par(mai=c(1.5,2.1,1,1))
 barplot(top20reordered$harm1, horiz = T, names.arg = top20reordered$EVTYPE, las = 1,xlim=c(0,100000), cex.names = 1, xlab = "Total harmful events", main = "Top 20 causes and number of harmful events (fatalities + injuries) \nfrom 1950 to 2011 in U.S.", sub = "Data from the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database")
 ```
 
-![plot of chunk unnamed-chunk-8](./PA2_files/figure-html/unnamed-chunk-8.png) 
+![plot of chunk unnamed-chunk-8](figure/unnamed-chunk-8.png) 
 
 ### Across the United States, which types of events have the greatest economic consequences?
 
@@ -110,24 +111,49 @@ str (ecocons)
 ```
 
 ```
-## 'data.frame':	404386 obs. of  5 variables:
-##  $ EVTYPE    : Factor w/ 924 levels "?","ABNORMAL WARMTH",..: 783 783 783 783 783 783 783 783 783 783 ...
+## 'data.frame':	902297 obs. of  5 variables:
+##  $ EVTYPE    : Factor w/ 985 levels "?","ABNORMALLY DRY",..: 830 830 830 830 830 830 830 830 830 830 ...
 ##  $ PROPDMG   : num  25 2.5 25 2.5 2.5 2.5 2.5 2.5 25 25 ...
 ##  $ PROPDMGEXP: Factor w/ 18 levels "-","?","+","0",..: 16 16 16 16 16 16 16 16 16 16 ...
 ##  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...
 ##  $ CROPDMGEXP: Factor w/ 8 levels "?","0","2","B",..: NA NA NA NA NA NA NA NA NA NA ...
 ```
-Create a variable that sums properties and crops damage and eliminate events without economic impact
+
+Create a variable that sums properties and crops damage  and eliminate events without economic impact
 
 ```r
 ecocons$PROPDMGEXP <- as.character(toupper(ecocons$PROPDMGEXP))
 ecocons$CROPDMGEXP <- as.character(toupper(ecocons$CROPDMGEXP))
-ecocons1 <- na.omit(ecocons)
+ecoconsNA <- na.omit(ecocons)
+ecocons1 <- ecoconsNA["PROPDMG" > 0 | "CROPDMG" > 0,]
 for (i in 1:nrow(ecocons1)) {
-        if (ecocons1$PROPDMGEXP[i] == "H") {
-                ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 100} else if (ecocons1$PROPDMGEXP[i] == "K") {
-                        ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000} else if (ecocons1$PROPDMGEXP[i] == "M") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000} else if (ecocons1$PROPDMGEXP[i] == "B") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000000} else {
-                                        ecocons1$PROPimpact[i] = NA
-        }
+    if (ecocons1$PROPDMGEXP[i] == "H") {
+            ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 100
+                } else if (ecocons1$PROPDMGEXP[i] == "K") {
+                        ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000
+                        } else if (ecocons1$PROPDMGEXP[i] == "M") {
+                            ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000
+                            } else if (ecocons1$PROPDMGEXP[i] == "B") {ecocons1$PROPimpact[i] = ecocons1$PROPDMG[i] * 1000000000                                                                       } else {
+                                ecocons1$PROPimpact[i] = NA
+                                }
 }
+
+for (n in 1:nrow(ecocons1)) {
+        if (ecocons1$CROPDMGEXP[n] == "K") {
+            ecocons1$CROPimpact[n] = ecocons1$CROPDMG[n] * 1000
+            } else if (ecocons1$CROPDMGEXP[n] == "M") {
+                ecocons1$CROPimpact[n] = ecocons1$CROPDMG[n] * 1000000
+                } else if (ecocons1$CROPDMGEXP[n] == "B") {
+                    ecocons1$CROPimpact[n] = ecocons1$CROPDMG[n] * 1000000000
+                    } else {
+                        ecocons1$CROPimpact[n] = NA
+                        }
+}
+
+ecocons1$totimpact <- with(ecocons1,(PROPimpact + CROPimpact)) 
+ecocons1$EVTYPE <- toupper(ecocons1$EVTYPE)
+ecocons1$EVTYPE[ecocons1$EVTYPE == "TSTM WIND"] <- "THUNDERSTORM WIND"
+ecocons1$EVTYPE[grep("HURRICANE",ecocons1$EVTYPE)] <- "HURRICANE"
+ecocons2 <- aggregate(totimpact ~ EVTYPE, data=ecocons1,FUN = "sum")
+topimpact <- ecocons2[order(ecocons2$totimpact,decreasing=T),]
 ```
